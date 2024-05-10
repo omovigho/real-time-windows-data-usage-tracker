@@ -23,7 +23,7 @@ Data Usage Tracker is a Python application designed to track real-time internet 
 ## Installation
 
 1. Clone the repository:
-git clone https://github.com/yourusername/data-usage-tracker.git
+[git clone https://github.com/yourusername/data-usage-tracker.git](https://github.com/omovigho/real-time-windows-data-usage-tracker.git)
 
 2. Install dependencies:
 pip install -r requirements.txt
