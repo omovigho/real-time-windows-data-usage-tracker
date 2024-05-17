@@ -119,7 +119,6 @@ class NetworkUsageGUI(QWidget):
                 continue
 
         # Return the list of process dictionaries
-        # print(f"processes:  {processes}")
         return processes
 
     def __init__(self):
@@ -137,14 +136,11 @@ class NetworkUsageGUI(QWidget):
         self.tableWidget.setRowCount(
             11
         )  # Increase the row count to accommodate the total row
-        self.tableWidget.setColumnCount(6)
+        self.tableWidget.setColumnCount(3)
         self.tableWidget.setHorizontalHeaderLabels(
             [
-                "PID",
+                "Icon",
                 "Process Name",
-                "Upload",
-                "Download",
-                "Create Time",
                 "Data Usage",
             ]
         )
@@ -169,7 +165,6 @@ class NetworkUsageGUI(QWidget):
         total_download = 0
 
         for i, process in enumerate(process_data):
-            self.tableWidget.setItem(i, 0, QTableWidgetItem(str(process["pid"])))
             
             #####
             # Extract the icon for the process
@@ -224,32 +219,26 @@ class NetworkUsageGUI(QWidget):
                 pixmap = QPixmap.fromImage(image)
 
                 # Create a table widget item for the process name
-                process_name_item = QTableWidgetItem(process["name"])
+                #process_name_item = QTableWidgetItem(process["name"])
+                process_name_item = QTableWidgetItem()
                 # Set the icon for the process name item
                 process_name_item.setIcon(QIcon(pixmap))
-                self.tableWidget.setItem(i, 1, process_name_item)
+                self.tableWidget.setItem(i, 0, process_name_item)
             except Exception as e:
-                pass
-            ###
-            
-            #self.tableWidget.setItem(i, 2, QTableWidgetItem(process["name"]))
-            self.tableWidget.setItem(
-                i, 2, QTableWidgetItem(self.get_size(process["Upload"]))
-            )
-            self.tableWidget.setItem(
-                i, 3, QTableWidgetItem(self.get_size(process["Download"]))
-            )
-            self.tableWidget.setItem(
-                i,
-                4,
-                QTableWidgetItem(process["create_time"].strftime("%Y-%m-%d %H:%M:%S")),
-            )
+                pixmap = QPixmap('app-icon.png').scaled(32, 32)  # Resize the image to 100x100 
+                icon = QIcon(pixmap)
+                image_item = QTableWidgetItem()
+                image_item.setIcon(icon)
+                self.tableWidget.setItem(i, 0, image_item)
 
+            process_name = QTableWidgetItem(process["name"])
+            self.tableWidget.setItem(i, 1, process_name)
+            
             # Calculate and display the total data usage
             total_data_usage = process["Upload"] + process["Download"]
             self.tableWidget.setItem(
                 i,
-                5,
+                2,
                 QTableWidgetItem(
                     self.get_size(
                         process["Data Usage"]
@@ -266,7 +255,7 @@ class NetworkUsageGUI(QWidget):
         # Display the total data usage at the top
         self.tableWidget.setItem(10, 0, QTableWidgetItem("Total Data Usage"))
         self.tableWidget.setItem(
-            10, 5, QTableWidgetItem(self.get_size(total_upload + total_download))
+            10, 1, QTableWidgetItem(self.get_size(total_upload + total_download))
         )
 
     def start_monitoring(self):
