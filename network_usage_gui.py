@@ -8,7 +8,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-
 class ExeDataWidget(QWidget):
 
     def get_size(self, bytes: int) -> str:
@@ -29,8 +28,6 @@ class ExeDataWidget(QWidget):
         super().__init__()
 
         self.value = 0
-
-        self.setFixedHeight(60)
 
         hlay = QHBoxLayout(self)
 
@@ -172,15 +169,29 @@ class NetworkUsageGUI(QWidget):
 
         # Set up the GUI window
         self.setWindowTitle("App Data Usage Monitor")
-        # self.setGeometry(100, 100, 800, 600)
-        self.lay = QVBoxLayout(self)
-        self.lay.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.setGeometry(100, 100, 300, 400)
 
-        self.setFixedSize(300, 600)
+        # Create a QScrollArea
+        scroll_area = QScrollArea(self)
+        scroll_area.setWidgetResizable(True)
+        
+        # Create a QWidget to contain the layout
+        widget = QWidget()
+        
+        # Set the layout on the QWidget
+        self.lay = QVBoxLayout(widget)
+        self.lay.setAlignment(Qt.AlignmentFlag.AlignTop)
+        
+        # Set the QWidget as the widget for the QScrollArea
+        scroll_area.setWidget(widget)
+
+        # Create a main layout and add the QScrollArea to it
+        main_layout = QVBoxLayout(self)
+        main_layout.addWidget(scroll_area)
 
         self.listItems: dict[str, ExeDataWidget] = {}
 
-        self.startTimer(300)
+        self.startTimer(100)
 
         self.start_monitoring()
 
@@ -253,26 +264,13 @@ class NetworkUsageGUI(QWidget):
 
                 # Create a QPixmap from the QImage.
                 pixmap = QPixmap.fromImage(image)
-
-                # Create a table widget item for the process name
-                # process_name_item = QTableWidgetItem(process["name"])
-                # process_name_item = QTableWidgetItem()
-                # # Set the icon for the process name item
-                # process_name_item.setIcon(QIcon(pixmap))
-                # self.tableWidget.setItem(i, 0, process_name_item)
+                
             except Exception as e:
                 pixmap = QPixmap("app-icon.png")
                 if not pixmap.isNull():
                     pixmap = pixmap.scaled(32, 32)  # Resize the image to 100x100
 
-                # icon = QIcon(pixmap)
-                # image_item = QTableWidgetItem()
-                # image_item.setIcon(icon)
-                # self.tableWidget.setItem(i, 0, image_item)
-
             process_name = process["name"]
-            # process_name = QTableWidgetItem(process_name)
-            # self.tableWidget.setItem(i, 1, process_name)
 
             # Calculate and display the total data usage
             total_data_usage = process["Upload"] + process["Download"]
@@ -280,7 +278,6 @@ class NetworkUsageGUI(QWidget):
                 process["Data Usage"] if total_data_usage == 0 else total_data_usage
             )
 
-            # self.tableWidget.setItem(i, 2, QTableWidgetItem(data_usage))
 
             # Accumulate total upload and download
             total_upload += process["Upload"]
