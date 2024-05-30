@@ -1,149 +1,255 @@
-from scapy.all import *
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 import psutil
+from scapy.all import sniff, IP
+from scapy.layers.inet import IP
+from scapy.all import ifaces
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from collections import defaultdict
-import os
-from threading import Thread
-import pandas as pd
+import psutil
+import win32gui
+import win32ui
+from datetime import datetime
+import time
 
-# get the all network adapter's MAC addresses
-all_macs = {iface.mac for iface in ifaces.values()}
-# A dictionary to map each connection to its correponding process ID (PID)
-connection2pid = {}
-# A dictionary to map each process ID (PID) to total Upload (0) and Download (1) traffic
-pid2traffic = defaultdict(lambda: [0, 0])
-# the global Pandas DataFrame that's used to track previous traffic stats
-global_df = None
-# global boolean for status of the program
-is_program_running = True
+class SniffingThread(QThread):
+    update = pyqtSignal()
 
-def get_size(bytes):
-    """
-    Returns size of bytes in a nice format
-    """
-    for unit in ['', 'K', 'M', 'G', 'T', 'P']:
-        if bytes < 1024:
-            return f"{bytes:.2f}{unit}B"
-        bytes /= 1024
+    def __init__(self, process_packet, parent=None):
+        super().__init__(parent)
+        self.process_packet = process_packet
+
+    def run(self):
+        sniff(prn=self.process_packet, store=False, count=0)
+        self.update.emit()
+
+class ConnectionThread(QThread):
+    update = pyqtSignal()
+
+    def __init__(self, connection2pid, is_program_running, parent=None):
+        super().__init__(parent)
+        self.connection2pid = connection2pid
+        self.is_program_running = is_program_running
+
+    def run(self):
+        while self.is_program_running:
+            for c in psutil.net_connections():
+                if c.laddr and c.raddr and c.pid:
+                    self.connection2pid[(c.laddr.port, c.raddr.port)] = c.pid
+                    self.connection2pid[(c.raddr.port, c.laddr.port)] = c.pid
+            time.sleep(1)  # Adjusted interval for better efficiency
+        self.update.emit()
+
+class ExeDataWidget(QWidget):
+    def get_size(self, bytes: int) -> str:
+        for unit in ["", "K", "M", "G", "T", "P"]:
+            if bytes < 1024:
+                return f"{bytes:.2f}{unit}B"
+            bytes /= 1024
+
+    def __init__(self, lay: QVBoxLayout, pixmap: QPixmap, name: str):
+        super().__init__()
+
+        self.value = 0
+        hlay = QHBoxLayout(self)
+        self.pixmap = QLabel()
+        self.pixmap.setPixmap(pixmap)
+        self.pixmap.setFixedSize(32, 32)
+        hlay.addWidget(self.pixmap)
+        vlay = QVBoxLayout()
+        hlay.addLayout(vlay)
+        hlay2 = QHBoxLayout()
+        vlay.addLayout(hlay2)
+        self.name = QLabel(name)
+        hlay2.addWidget(self.name)
+        hlay2.addStretch()
+        self.data_usage = QLabel()
+        hlay2.addWidget(self.data_usage)
+        self.progress = QProgressBar()
+        vlay.addWidget(self.progress)
+        lay.addWidget(self)
+
+    def setValue(self, value: int):
+        self.data_usage.setText(self.get_size(value))
+        self.progress.setValue(value)
+
+    def setMaximum(self, maximum: int):
+        self.progress.setMaximum(maximum)
+
+class NetworkUsageGUI(QWidget):
+    all_macs = {iface.mac for iface in ifaces.values()}
+
+    def __init__(self):
+        super().__init__()
+        self.is_program_running = True
+        self.connection2pid = {}
+        self.pid2traffic = defaultdict(lambda: [0, 0])
+
+        self.setWindowTitle("App Data Tracker")
+        self.setGeometry(100, 100, 300, 400)
+
+        main_layout = QVBoxLayout(self)
         
-def process_packet(packet):
-    global pid2traffic
-    try:
-        # get the packet source & destination IP addresses and ports
-        packet_connection = (packet.sport, packet.dport)
-    except (AttributeError, IndexError):
-        # sometimes the packet does not have TCP/UDP layers, we just ignore these packets
-        pass
-    else:
-        # get the PID responsible for this connection from our `connection2pid` global dictionary
-        packet_pid = connection2pid.get(packet_connection)
-        if packet_pid:
-            if packet.src in all_macs:
-                # the source MAC address of the packet is our MAC address
-                # so it's an outgoing packet, meaning it's upload
-                pid2traffic[packet_pid][0] += len(packet)
-            else:
-                # incoming packet, download
-                pid2traffic[packet_pid][1] += len(packet)
-                
-def get_connections():
-    """A function that keeps listening for connections on this machine 
-    and adds them to `connection2pid` global variable"""
-    global connection2pid
-    while is_program_running:
-        # using psutil, we can grab each connection's source and destination ports
-        # and their process ID
-        for c in psutil.net_connections():
-            if c.laddr and c.raddr and c.pid:
-                # if local address, remote address and PID are in the connection
-                # add them to our global dictionary
-                connection2pid[(c.laddr.port, c.raddr.port)] = c.pid
-                connection2pid[(c.raddr.port, c.laddr.port)] = c.pid
-        # sleep for a second
-        #time.sleep(1)
+        self.total_data_usage_label = QLabel("Total data usage: 0B")
+        self.total_data_usage_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        main_layout.addWidget(self.total_data_usage_label)
+
+        scroll_area = QScrollArea(self)
+        scroll_area.setWidgetResizable(True)
         
-def print_pid2traffic():
-    global global_df
-    # initialize the list of processes
-    processes = []
-    for pid, traffic in pid2traffic.items():
-        # `pid` is an integer that represents the process ID
-        # `traffic` is a list of two values: total Upload and Download size in bytes
+        widget = QWidget()
+        
+        self.lay = QVBoxLayout(widget)
+        self.lay.setAlignment(Qt.AlignmentFlag.AlignTop)
+        
+        scroll_area.setWidget(widget)
+        main_layout.addWidget(scroll_area)
+        
+        always_on_top_checkbox = QCheckBox("Always on top")
+        main_layout.addWidget(always_on_top_checkbox)
+
+        always_on_top_checkbox.setChecked(False)
+        always_on_top_checkbox.stateChanged.connect(self.handle_always_on_top)
+
+        self.listItems: dict[str, ExeDataWidget] = {}
+
+        self.startTimer(1000)  # Adjusted to update every second
+
+        self.start_monitoring()
+
+    def get_executable_path(self, process_name):
         try:
-            # get the process object from psutil
-            p = psutil.Process(pid)
+            for proc in psutil.process_iter(attrs=["name", "exe"]):
+                if proc.info["name"] == process_name:
+                    return proc.info["exe"]
         except psutil.NoSuchProcess:
-            # if process is not found, simply continue to the next PID for now
-            continue
-        # get the name of the process, such as chrome.exe, etc.
-        name = p.name()
-        # get the time the process was spawned
-        try:
-            create_time = datetime.fromtimestamp(p.create_time())
-        except OSError:
-            # system processes, using boot time instead
-            create_time = datetime.fromtimestamp(psutil.boot_time())
-        # construct our dictionary that stores process info
-        process = {
-            "pid": pid, "name": name, "create_time": create_time, "Upload": traffic[0],
-            "Download": traffic[1],  "Data Usage": traffic[0] + traffic[1]
-        }
-        try:
-            # calculate the upload and download speeds by simply subtracting the old stats from the new stats
-            process["Upload Speed"] = traffic[0] - global_df.at[pid, "Upload"]
-            process["Download Speed"] = traffic[1] - global_df.at[pid, "Download"]
-        except (KeyError, AttributeError):
-            # If it's the first time running this function, then the speed is the current traffic
-            # You can think of it as if old traffic is 0
-            process["Upload Speed"] = traffic[0]
-            process["Download Speed"] = traffic[1]
-        # append the process to our processes list
-        processes.append(process)
-    # construct our Pandas DataFrame
-    df = pd.DataFrame(processes)
-    try:
-        # set the PID as the index of the dataframe
-        df = df.set_index("pid")
-        # sort by column, feel free to edit this column
-        df.sort_values("Download", inplace=True, ascending=False)
-    except KeyError as e:
-        # when dataframe is empty
-        pass
-    # make another copy of the dataframe just for fancy printing
-    printing_df = df.copy()
-    try:
-        # apply the function get_size to scale the stats like '532.6KB/s', etc.
-        printing_df["Download"] = printing_df["Download"].apply(get_size)
-        printing_df["Upload"] = printing_df["Upload"].apply(get_size)
-        printing_df["Download Speed"] = printing_df["Download Speed"].apply(get_size).apply(lambda s: f"{s}/s")
-        printing_df["Upload Speed"] = printing_df["Upload Speed"].apply(get_size).apply(lambda s: f"{s}/s")
-        printing_df["Data Usage"] = printing_df["Data Usage"].apply(get_size)
-    except KeyError as e:
-        # when dataframe is empty again
-        pass
-    # clear the screen based on your OS
-    os.system("cls") if "nt" in os.name else os.system("clear")
-    # print our dataframe
-    print(printing_df.to_string())
-    # update the global df to our dataframe
-    global_df = df
+            pass
+        return None
 
+    def timerEvent(self, _):
+        process_data = self.print_pid2traffic()
+        total_upload = 0
+        total_download = 0
 
-def print_stats():
-    """Simple function that keeps printing the stats"""
-    while is_program_running:
-        #time.sleep(1)
-        print_pid2traffic()
+        for process in process_data:
+            executable_path = self.get_executable_path(process["name"])
+            try:
+                icons = win32gui.ExtractIconEx(executable_path, 0)
+                icon = icons[0][0]
+                width = height = 32
+                hdc = win32ui.CreateDCFromHandle(win32gui.GetDC(0))
+                hbmp = win32ui.CreateBitmap()
+                hbmp.CreateCompatibleBitmap(hdc, width, height)
+                hdc = hdc.CreateCompatibleDC()
+                hdc.SelectObject(hbmp)
+                win32gui.DrawIconEx(hdc.GetHandleOutput(), 0, 0, icon, width, height, 0, None, 0x0003)
+                
+                for iconList in icons:
+                    for icon in iconList:
+                        win32gui.DestroyIcon(icon)
+                hdc.DeleteDC()
+                win32gui.ReleaseDC(0, win32gui.GetDC(0))
+                
+                bitmapbits = hbmp.GetBitmapBits(True)
+                image = QImage(bitmapbits, width, height, QImage.Format_ARGB32_Premultiplied)
+                buffer = QBuffer()
+                buffer.setOpenMode(QIODevice.ReadWrite)
+                image.save(buffer, "PNG")
+                image.loadFromData(buffer.data(), "PNG")
+                pixmap = QPixmap.fromImage(image)
+            except Exception:
+                pixmap = QPixmap("app-icon.png")
+                if not pixmap.isNull():
+                    pixmap = pixmap.scaled(32, 32)
+            
+            process_name = process["name"]
+            total_data_usage = process["Upload"] + process["Download"]
+            data_usage = process["Data Usage"] if total_data_usage == 0 else total_data_usage
+            total_upload += process["Upload"]
+            total_download += process["Download"]
+            pid = process["pid"]
+            item = self.listItems.get(pid)
+            if not item:
+                item = ExeDataWidget(self.lay, pixmap, process_name)
+                self.listItems[pid] = item
+            item.setValue(data_usage)
         
+        total = total_download + total_upload
+        self.total_data_usage_label.setText(f"Total data usage: {ExeDataWidget.get_size(None, total)}")
+        
+        for item in self.listItems.values():
+            item.setMaximum(total)
+
+    def _process_packet(self, packet):
+        try:
+            if IP in packet:
+                ip_layer = packet[IP]
+                packet_connection = (ip_layer.sport, ip_layer.dport)
+                packet_pid = self.connection2pid.get(packet_connection)
+                if packet_pid:
+                    if packet.src in self.all_macs:
+                        self.pid2traffic[packet_pid][0] += len(packet)
+                    else:
+                        self.pid2traffic[packet_pid][1] += len(packet)
+        except AttributeError:
+            pass
+
+    def print_pid2traffic(self):
+        processes = []
+        for pid, traffic in self.pid2traffic.items():
+            try:
+                p = psutil.Process(pid)
+                name = p.name()
+                try:
+                    create_time = datetime.fromtimestamp(p.create_time())
+                except OSError:
+                    create_time = datetime.fromtimestamp(psutil.boot_time())
+                process = {
+                    "pid": pid,
+                    "name": name,
+                    "create_time": create_time,
+                    "Upload": traffic[0],
+                    "Download": traffic[1],
+                    "Data Usage": traffic[0] + traffic[1],
+                }
+                try:
+                    process["Upload Speed"] = traffic[0] - self.global_df.at[pid, "Upload"]
+                    process["Download Speed"] = traffic[1] - self.global_df.at[pid, "Download"]
+                except (KeyError, AttributeError):
+                    process["Upload Speed"] = traffic[0]
+                    process["Download Speed"] = traffic[1]
+                    process["Data Usage"] = traffic[0] + traffic[1]
+                processes.append(process)
+            except psutil.NoSuchProcess:
+                continue
+        return processes
+
+    def start_monitoring(self):
+        self.is_program_running = True
+        self.connection_thread = ConnectionThread(self.connection2pid, self.is_program_running)
+        self.sniffing_thread = SniffingThread(self._process_packet)
+        
+        self.connection_thread.update.connect(self.update_ui)
+        self.sniffing_thread.update.connect(self.update_ui)
+        
+        self.connection_thread.start()
+        self.sniffing_thread.start()
+
+    def update_ui(self):
+        self.timerEvent(None)
+
+    def handle_always_on_top(self, toggled: bool):
+        self.setWindowFlag(Qt.WindowStaysOnTopHint, toggled)
+        self.show()
+
+    def closeEvent(self, _):
+        self.is_program_running = False
+        QApplication.instance().quit()
+
 if __name__ == "__main__":
-    # start the printing thread
-    printing_thread = Thread(target=print_stats)
-    printing_thread.start()
-    # start the get_connections() function to update the current connections of this machine
-    connections_thread = Thread(target=get_connections)
-    connections_thread.start()
-    
-        # start sniffing
-    print("Started sniffing")
-    sniff(prn=process_packet, store=False)
-    # setting the global variable to False to exit the program
-    is_program_running = False   
+    import sys
+    app = QApplication(sys.argv)
+    ex = NetworkUsageGUI()
+    ex.show()
+    sys.exit(app.exec())
