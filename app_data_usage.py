@@ -12,6 +12,8 @@ import win32gui
 import win32ui
 from datetime import datetime
 import time
+from settings import SettingsWindow  # Import the settings window class
+from PyQt5.QtGui import QPixmap, QCursor
 
 class SniffingThread(QThread):
     update = pyqtSignal()
@@ -106,11 +108,29 @@ class NetworkUsageGUI(QWidget):
         scroll_area.setWidget(widget)
         main_layout.addWidget(scroll_area)
         
+        # Bottom layout
+        bottom_layout = QHBoxLayout()
+        
         always_on_top_checkbox = QCheckBox("Always on top")
-        main_layout.addWidget(always_on_top_checkbox)
+        #main_layout.addWidget(always_on_top_checkbox)
 
         always_on_top_checkbox.setChecked(False)
         always_on_top_checkbox.stateChanged.connect(self.handle_always_on_top)
+        
+        bottom_layout.addWidget(always_on_top_checkbox)
+
+        # Spacer to push the settings icon to the bottom-right
+        bottom_layout.addStretch()
+
+        # Settings Icon (Bottom-Right)
+        settings_icon = QLabel(self)
+        settings_icon.setPixmap(QPixmap("images/settings.png").scaled(40, 40, Qt.KeepAspectRatio))
+        settings_icon.setCursor(QCursor(Qt.PointingHandCursor))
+        settings_icon.mousePressEvent = self.open_settings  # Connect click to settings window
+        bottom_layout.addWidget(settings_icon)
+
+        # Add the bottom layout to the main layout
+        main_layout.addLayout(bottom_layout)
 
         self.listItems: dict[str, ExeDataWidget] = {}
 
@@ -246,6 +266,12 @@ class NetworkUsageGUI(QWidget):
     def closeEvent(self, _):
         self.is_program_running = False
         QApplication.instance().quit()
+        
+
+    def open_settings(self, event):
+        # Open the Settings Window
+        settings_window = SettingsWindow(self)
+        settings_window.exec_()
 
 if __name__ == "__main__":
     import sys
