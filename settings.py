@@ -1,123 +1,148 @@
 import json
-import os
+
 from PyQt5.QtWidgets import (
-    QDialog, QVBoxLayout, QLabel, QLineEdit, QComboBox, QCheckBox, 
-    QPushButton, QHBoxLayout, QMessageBox
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QComboBox,
+    QPushButton, QMessageBox, QCheckBox
 )
+from PyQt5.QtCore import Qt
 
 class SettingsWindow(QDialog):
-    SETTINGS_FILE = "settings_data.json"
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Settings")
         self.resize(400, 300)
+        self.settings_data = self.load_settings()
+
+        # Main layout
         self.layout = QVBoxLayout(self)
+
+        # Data Limit Section
+        self.add_data_limit_section()
+
+        # Exceeded Data Limit Section
+        self.add_exceeded_data_limit_section()
+
+        # Save Button
+        self.add_save_button()
         
-        # Load settings
-        self.settings = self.load_settings()
+        
+    def get_size(self, bytes: int) -> str:
+        for unit in ["", "K", "M", "G", "T", "P"]:
+            if bytes < 1024:
+                return f"{bytes:.2f}{unit}B"
+            bytes /= 1024
 
-        # Components
-        self.create_ui()
-
-    def load_settings(self):
-        if not os.path.exists(self.SETTINGS_FILE):
-            with open(self.SETTINGS_FILE, "w") as f:
-                json.dump({
-                    "data-limit": None,
-                    "exceeded-data-limit": None,
-                    "enable-data-limit": False,
-                    "enable-alert-message": False
-                }, f)
-        with open(self.SETTINGS_FILE, "r") as f:
-            return json.load(f)
-
-    def save_settings(self):
-        with open(self.SETTINGS_FILE, "w") as f:
-            json.dump(self.settings, f)
-
-    def create_ui(self):
-        # Set Data Limit
-        self.add_data_limit_ui()
-
-        # Enable Data Limit
-        self.add_toggle_ui("Enable Data Limit", "enable-data-limit")
-
-        # Enable Data Limit Alert
-        self.add_toggle_ui("Enable Data Limit Alert", "enable-alert-message")
-
-        # Exceeded Data Limit
-        self.add_exceeded_limit_ui()
-
-        # Buttons
-        save_btn = QPushButton("Save")
-        save_btn.clicked.connect(self.save_settings)
-        self.layout.addWidget(save_btn)
-
-    def add_data_limit_ui(self):
-        label = QLabel("Set Data Limit (KB, MB, GB):")
-        self.layout.addWidget(label)
-
-        self.data_limit_input = QLineEdit(self)
-        self.layout.addWidget(self.data_limit_input)
-
-        self.data_limit_unit = QComboBox(self)
+    def add_data_limit_section(self):
+        # Data Limit Input
+        data_limit_layout = QHBoxLayout()
+        self.data_limit_input = QLineEdit()
+        self.data_limit_input.setPlaceholderText("Enter data limit")
+        self.data_limit_unit = QComboBox()
         self.data_limit_unit.addItems(["KB", "MB", "GB"])
-        self.layout.addWidget(self.data_limit_unit)
+        self.data_limit_button = QPushButton("Set Data Limit")
+        self.data_limit_button.clicked.connect(self.set_data_limit)
 
-        set_btn = QPushButton("Set Data Limit")
-        set_btn.clicked.connect(self.set_data_limit)
-        self.layout.addWidget(set_btn)
+        data_limit_layout.addWidget(QLabel("Data Limit:"))
+        data_limit_layout.addWidget(self.data_limit_input)
+        data_limit_layout.addWidget(self.data_limit_unit)
+        data_limit_layout.addWidget(self.data_limit_button)
+        self.layout.addLayout(data_limit_layout)
+
+        # Display Current Data Limit
+        data_int  = int((self.settings_data.get("data-limit", 'Null')))
+        #self.current_data_limit_label = QLabel(f"Current Data Limit: {self.settings_data.get('data-limit', 'Null')}")
+        self.current_data_limit_label = QLabel(f"Current Data Limit: {self.get_size(data_int)}")
+       
+        self.layout.addWidget(self.current_data_limit_label)
+
+        # Enable Data Limit Toggle
+        self.enable_data_limit_checkbox = QCheckBox("Enable Data Limit")
+        self.enable_data_limit_checkbox.setChecked(self.settings_data.get("enable-data-limit", False))
+        self.layout.addWidget(self.enable_data_limit_checkbox)
+
+    def add_exceeded_data_limit_section(self):
+        # Exceeded Data Limit Input
+        exceeded_limit_layout = QHBoxLayout()
+        self.exceeded_limit_input = QLineEdit()
+        self.exceeded_limit_input.setPlaceholderText("Enter exceeded data limit")
+        self.exceeded_limit_unit = QComboBox()
+        self.exceeded_limit_unit.addItems(["KB", "MB", "GB"])
+        self.unlimited_checkbox = QCheckBox("Unlimited")
+        self.unlimited_checkbox.setChecked(self.settings_data.get("exceeded-data-limit", "Unlimited") == "Unlimited")
+
+        exceeded_limit_layout.addWidget(QLabel("Exceeded Limit:"))
+        exceeded_limit_layout.addWidget(self.exceeded_limit_input)
+        exceeded_limit_layout.addWidget(self.exceeded_limit_unit)
+        exceeded_limit_layout.addWidget(self.unlimited_checkbox)
+        self.layout.addLayout(exceeded_limit_layout)
+
+        # Display Current Exceeded Data Limit
+        if self.settings_data.get("exceeded-data-limit", 'Null') == "Unlimited":
+            self.current_exceeded_limit_label = QLabel(f"Exceeded Data Limit: Unlimited")
+        else:
+            exceeded_data_int  = int((self.settings_data.get("exceeded-data-limit", 'Null')))
+            self.current_exceeded_limit_label = QLabel(f"Exceeded Data Limit: {self.get_size(exceeded_data_int)}")
+        self.layout.addWidget(self.current_exceeded_limit_label)
+
+        # Enable Data Limit Alert Toggle
+        self.enable_alert_checkbox = QCheckBox("Enable Data Limit Alert")
+        self.enable_alert_checkbox.setChecked(self.settings_data.get("enable-alert-message", False))
+        self.layout.addWidget(self.enable_alert_checkbox)
+
+    def add_save_button(self):
+        save_button = QPushButton("Save")
+        save_button.clicked.connect(self.save_settings)
+        self.layout.addWidget(save_button, alignment=Qt.AlignRight)
 
     def set_data_limit(self):
         try:
             value = int(self.data_limit_input.text())
+            if value < 1:
+                raise ValueError("Data limit must be greater than or equal to 1.")
+            
             unit = self.data_limit_unit.currentText()
-            multiplier = {"KB": 1024, "MB": 1024**2, "GB": 1024**3}[unit]
-            self.settings["data-limit"] = value * multiplier
-            QMessageBox.information(self, "Success", "Data Limit Set Successfully!")
-        except ValueError:
-            QMessageBox.warning(self, "Error", "Please enter a valid number.")
+            value_in_bytes = value * 1024 ** ["BYTES","KB", "MB", "GB"].index(unit)
+            self.settings_data["data-limit"] = value_in_bytes
+            self.current_data_limit_label.setText(f"Current Data Limit: {value_in_bytes} bytes")
+            QMessageBox.information(self, "Success", "Data limit set successfully.")
+        except ValueError as e:
+            QMessageBox.critical(self, "Error", str(e))
 
-    def add_toggle_ui(self, label_text, setting_key):
-        layout = QHBoxLayout()
-        label = QLabel(label_text)
-        layout.addWidget(label)
+    def save_settings(self):
+        # Save Enable Data Limit and Alert settings
+        self.settings_data["enable-data-limit"] = self.enable_data_limit_checkbox.isChecked()
+        self.settings_data["enable-alert-message"] = self.enable_alert_checkbox.isChecked()
 
-        toggle = QCheckBox("Enable")
-        toggle.setChecked(self.settings[setting_key])
-        toggle.stateChanged.connect(lambda state: self.toggle_setting(setting_key, state))
-        layout.addWidget(toggle)
-
-        self.layout.addLayout(layout)
-
-    def toggle_setting(self, key, state):
-        self.settings[key] = state == 2  # True if checked, else False
-
-    def add_exceeded_limit_ui(self):
-        label = QLabel("Set Exceeded Data Limit (KB, MB, GB):")
-        self.layout.addWidget(label)
-
-        self.exceeded_limit_input = QLineEdit(self)
-        self.layout.addWidget(self.exceeded_limit_input)
-
-        self.exceeded_limit_unit = QComboBox(self)
-        self.exceeded_limit_unit.addItems(["KB", "MB", "GB", "Unlimited"])
-        self.layout.addWidget(self.exceeded_limit_unit)
-
-        set_btn = QPushButton("Set Exceeded Data Limit")
-        set_btn.clicked.connect(self.set_exceeded_limit)
-        self.layout.addWidget(set_btn)
-
-    def set_exceeded_limit(self):
-        unit = self.exceeded_limit_unit.currentText()
-        if unit == "Unlimited":
-            self.settings["exceeded-data-limit"] = "Unlimited"
+        # Save Exceeded Data Limit
+        if self.unlimited_checkbox.isChecked():
+            self.settings_data["exceeded-data-limit"] = "Unlimited"
         else:
             try:
                 value = int(self.exceeded_limit_input.text())
-                multiplier = {"KB": 1024, "MB": 1024**2, "GB": 1024**3}[unit]
-                self.settings["exceeded-data-limit"] = value * multiplier
-            except ValueError:
-                QMessageBox.warning(self, "Error", "Please enter a valid number.")
-        QMessageBox.information(self, "Success", "Exceeded Data Limit Set Successfully!")
+                if value < 1:
+                    raise ValueError("Exceeded data limit must be greater than or equal to 1.")
+
+                unit = self.exceeded_limit_unit.currentText()
+                value_in_bytes = value * 1024 ** ["BYTES","KB", "MB", "GB"].index(unit)
+                self.settings_data["exceeded-data-limit"] = value_in_bytes
+            except ValueError as e:
+                QMessageBox.critical(self, "Error", str(e))
+                return
+
+        # Save settings to file
+        self.save_settings_to_file()
+        QMessageBox.information(self, "Success", "Settings saved successfully.")
+        self.close()  # Close the settings window
+
+    def load_settings(self):
+        try:
+            with open("settings_data.json", "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {}
+
+    def save_settings_to_file(self):
+        with open("settings_data.json", "w") as f:
+            json.dump(self.settings_data, f, indent=4)
+
+
