@@ -159,7 +159,7 @@ class NetworkUsageGUI(QWidget):
                 image.loadFromData(buffer.data(), "PNG")
                 pixmap = QPixmap.fromImage(image)
             except Exception:
-                pixmap = QPixmap("app-icon.png")
+                pixmap = QPixmap("default-icon.png")
                 if not pixmap.isNull():
                     pixmap = pixmap.scaled(32, 32)
             
