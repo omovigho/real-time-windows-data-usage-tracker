@@ -6,8 +6,10 @@ from PyQt5.QtWidgets import (
     QLabel,
     QVBoxLayout,
     QCheckBox,
+    QHBoxLayout,
 )
-
+from PyQt5.QtGui import QPixmap, QCursor
+from settings import SettingsWindow  # Import the settings window class
 
 class RealTimeInternetUsageMonitor(QWidget):
     def __init__(self):
@@ -21,11 +23,35 @@ class RealTimeInternetUsageMonitor(QWidget):
         self.data_usage_label = QLabel("Data Usage: 0 MB")
         layout.addWidget(self.data_usage_label)
 
-        always_on_top_checkbox = QCheckBox("Always on top")
+        '''always_on_top_checkbox = QCheckBox("Always on top")
         layout.addWidget(always_on_top_checkbox)
 
         always_on_top_checkbox.setChecked(False)
+        always_on_top_checkbox.stateChanged.connect(self.handle_always_on_top)'''
+        
+        # Bottom layout
+        bottom_layout = QHBoxLayout()
+        
+        always_on_top_checkbox = QCheckBox("Always on top")
+        #main_layout.addWidget(always_on_top_checkbox)
+
+        always_on_top_checkbox.setChecked(False)
         always_on_top_checkbox.stateChanged.connect(self.handle_always_on_top)
+        
+        bottom_layout.addWidget(always_on_top_checkbox)
+
+        # Spacer to push the settings icon to the bottom-right
+        bottom_layout.addStretch()
+        
+        # Settings Icon (Bottom-Right)
+        settings_icon = QLabel(self)
+        settings_icon.setPixmap(QPixmap("images/settings.png").scaled(40, 40, Qt.KeepAspectRatio))
+        settings_icon.setCursor(QCursor(Qt.PointingHandCursor))
+        settings_icon.mousePressEvent = self.open_settings  # Connect click to settings window
+        bottom_layout.addWidget(settings_icon)
+
+        # Add the bottom layout to the main layout
+        layout.addLayout(bottom_layout)
 
         self.startTimer(100)
         self.show()
@@ -49,6 +75,11 @@ class RealTimeInternetUsageMonitor(QWidget):
     def handle_always_on_top(self, toggled: bool):
         self.setWindowFlag(Qt.WindowStaysOnTopHint, toggled)
         self.show()
+        
+    def open_settings(self, event):
+        # Open the Settings Window
+        settings_window = SettingsWindow(self)
+        settings_window.exec_()
 
 
 class App(QApplication):
