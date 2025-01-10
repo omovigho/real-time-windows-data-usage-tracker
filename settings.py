@@ -6,6 +6,79 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 
+
+class ToggleButton(QPushButton):
+    def __init__(self, text_on="ON", text_off="OFF", parent=None):
+        super().__init__(parent)
+        self.text_on = text_on
+        self.text_off = text_off
+        self.settings_data = SettingsWindow.load_settings(self)
+        self.is_on = self.settings_data  # Default state is OFF
+        self.setCheckable(True)
+        self.update_button()
+
+        # Connect toggle action
+        self.clicked.connect(self.toggle_state)
+        
+    def toggle_state(self):
+        self.is_on = not self.is_on
+        self.update_button()
+
+    def update_button(self):
+        self.setText(self.text_on if self.is_on else self.text_off)
+        self.setStyleSheet(self.get_stylesheet())
+        
+    def get_stylesheet(self):
+        if self.is_on:
+            return """
+                QPushButton {
+                    background-color: #4CAF50;
+                    color: white;
+                    border-radius: 15px;
+                    padding: 5px 10px;
+                }
+                QPushButton:hover {
+                    background-color: #45a049;
+                }
+            """
+        else:
+            return """
+                QPushButton {
+                    background-color: #f44336;
+                    color: white;
+                    border-radius: 15px;
+                    padding: 5px 10px;
+                }
+                QPushButton:hover {
+                    background-color: #e53935;
+                }
+            """
+    
+    '''self.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+                border-radius: 12px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QPushButton:checked {
+                background-color: #f44336;
+            }
+            QPushButton:checked:hover {
+                background-color: #da190b;
+            }
+        """)'''
+        
 class SettingsWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -59,6 +132,10 @@ class SettingsWindow(QDialog):
         self.enable_data_limit_checkbox = QCheckBox("Enable Data Limit")
         self.enable_data_limit_checkbox.setChecked(self.settings_data.get("enable-data-limit", False))
         self.layout.addWidget(self.enable_data_limit_checkbox)
+        # Enable Data Limit Toggle
+        '''self.enable_data_limit_toggle = ToggleButton("ON", "OFF")
+        self.layout.addWidget(QLabel("Enable Data Limit:"))
+        self.layout.addWidget(self.enable_data_limit_toggle, alignment=Qt.AlignLeft)'''
 
     def add_exceeded_data_limit_section(self):
         # Exceeded Data Limit Input
@@ -84,10 +161,14 @@ class SettingsWindow(QDialog):
             self.current_exceeded_limit_label = QLabel(f"Exceeded Data Limit: {self.get_size(exceeded_data_int)}")
         self.layout.addWidget(self.current_exceeded_limit_label)
 
-        # Enable Data Limit Alert Toggle
+        '''# Enable Data Limit Alert Toggle
         self.enable_alert_checkbox = QCheckBox("Enable Data Limit Alert")
         self.enable_alert_checkbox.setChecked(self.settings_data.get("enable-alert-message", False))
-        self.layout.addWidget(self.enable_alert_checkbox)
+        self.layout.addWidget(self.enable_alert_checkbox)'''
+        # Enable Data Limit Alert Toggle
+        self.enable_alert_toggle = ToggleButton("ON", "OFF")
+        self.layout.addWidget(QLabel("Enable Data Limit Alert:"))
+        self.layout.addWidget(self.enable_alert_toggle, alignment=Qt.AlignLeft)
 
     def add_save_button(self):
         save_button = QPushButton("Save")
@@ -111,7 +192,11 @@ class SettingsWindow(QDialog):
     def save_settings(self):
         # Save Enable Data Limit and Alert settings
         self.settings_data["enable-data-limit"] = self.enable_data_limit_checkbox.isChecked()
-        self.settings_data["enable-alert-message"] = self.enable_alert_checkbox.isChecked()
+        #self.settings_data["enable-alert-message"] = self.enable_alert_checkbox.isChecked()
+        #enable_data_limit = self.enable_data_limit_toggle.is_on
+        self.settings_data["enable-alert-message"] = self.enable_alert_toggle.is_on
+        #QMessageBox.information(self, "Settings Saved", f"Enable Data Limit: {enable_data_limit}\nEnable Alert: {enable_alert}")
+        #self.close()
 
         # Save Exceeded Data Limit
         if self.unlimited_checkbox.isChecked():
