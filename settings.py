@@ -1,4 +1,5 @@
 import json
+import os
 
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QComboBox,
@@ -80,11 +81,13 @@ class ToggleButton(QPushButton):
         """)'''
         
 class SettingsWindow(QDialog):
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Settings")
         self.resize(400, 300)
         self.settings_data = self.load_settings()
+        SETTINGS_FILE = "settings_data.json"
 
         # Main layout
         self.layout = QVBoxLayout(self)
@@ -122,9 +125,12 @@ class SettingsWindow(QDialog):
         self.layout.addLayout(data_limit_layout)
 
         # Display Current Data Limit
-        data_int  = int((self.settings_data.get("data-limit", 'Null')))
-        #self.current_data_limit_label = QLabel(f"Current Data Limit: {self.settings_data.get('data-limit', 'Null')}")
-        self.current_data_limit_label = QLabel(f"Current Data Limit: {self.get_size(data_int)}")
+        if self.settings_data.get("data-limit", 'Null') == "Null":
+            self.current_data_limit_label = QLabel(f"Current Data Limit: Null")
+        else:
+            data_int  = int((self.settings_data.get("data-limit", 'Null')))
+            #self.current_data_limit_label = QLabel(f"Current Data Limit: {self.settings_data.get('data-limit', 'Null')}")
+            self.current_data_limit_label = QLabel(f"Current Data Limit: {self.get_size(data_int)}")
        
         self.layout.addWidget(self.current_data_limit_label)
 
@@ -155,7 +161,7 @@ class SettingsWindow(QDialog):
 
         # Display Current Exceeded Data Limit
         if self.settings_data.get("exceeded-data-limit", 'Null') == "Unlimited":
-            self.current_exceeded_limit_label = QLabel(f"Exceeded Data Limit: Unlimited")
+            self.current_exceeded_limit_label = QLabel(f"Exceeded Data Limit: Null")
         else:
             exceeded_data_int  = int((self.settings_data.get("exceeded-data-limit", 'Null')))
             self.current_exceeded_limit_label = QLabel(f"Exceeded Data Limit: {self.get_size(exceeded_data_int)}")
@@ -220,6 +226,14 @@ class SettingsWindow(QDialog):
         self.close()  # Close the settings window
 
     def load_settings(self):
+        if not os.path.exists("settings_data.json"):
+            with open("settings_data.json", "w") as f:
+                json.dump({
+                    "data-limit": 'Null',
+                    "exceeded-data-limit": 'Unlimited',
+                    "enable-data-limit": False,
+                    "enable-alert-message": False
+                }, f)
         try:
             with open("settings_data.json", "r") as f:
                 return json.load(f)
