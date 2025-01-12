@@ -14,7 +14,7 @@ class ToggleButton(QPushButton):
         self.text_on = text_on
         self.text_off = text_off
         self.settings_data = SettingsWindow.load_settings(self)
-        self.is_on = self.settings_data  # Default state is OFF
+        self.is_on = self.settings_data["enable-alert-message"]  # Default state is OFF
         self.setCheckable(True)
         self.update_button()
 
