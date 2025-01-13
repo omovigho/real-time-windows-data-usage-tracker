@@ -13,31 +13,16 @@ class DataUsageTracker(QThread):
     data_limit_alert = pyqtSignal()
     exceeded_data_limit_alert = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, enable_exceeded_limit):
         super().__init__()
         self.data_limit = None  # in bytes
-        self.exceeded_data_limit = None  # in bytes or None for unlimited
-        self.enable_data_limit = False
-        self.enable_alert_message = False
         self.total_data_used = 0  # in bytes
+        self.exceeded_data_limit = enable_exceeded_limit
         self.adapter_name = self.get_wifi_adapter()
         self.settings_data = self.load_settings()
-        self.enable_exceeded_limit = False
         self.running = True
 
     def load_settings(self):
-        """Load settings from files."""
-        '''if os.path.exists('data-limit.json'):
-            with open('data-limit.json', 'r') as file:
-                self.data_limit = int(file.read())
-        
-        if os.path.exists('exceeded-data-limit.json'):
-            with open('exceeded-data-limit.json', 'r') as file:
-                exceeded_data = file.read()
-                if exceeded_data == 'unlimited':
-                    self.exceeded_data_limit = None
-                else:
-                    self.exceeded_data_limit = int(exceeded_data)'''
         try:
             with open("settings_data.json", "r") as f:
                 return json.load(f)
@@ -75,19 +60,19 @@ class DataUsageTracker(QThread):
             self.total_data_used = current_data_usage - initial_data_usage
 
             #if self.enable_data_limit and self.data_limit and self.total_data_used >= self.data_limit:
-            if self.settings_data['enable_data_limit'] == True:
+            if self.settings_data['enable-data-limit'] == True:
                 if self.total_data_used >= self.data_limit:
-                    if self.enable_alert_message == True:
+                    if self.settings_data['enable-alert-message'] == True:
                         self.data_limit_alert.emit()
                     else:
                         self.disable_wifi()
                         self.running = False
 
-            if self.enable_exceeded_limit:
-                if self.exceeded_limit == "unlimited":
+            if self.exceeded_data_limit == True:
+                if self.settings_data['exceeded-data-limit'] == "unlimited":
                     # Stop tracking when exceeded limit is unlimited
                     self.running = False
-                elif self.total_data_usage >= (self.settings_data['data_limit'] + self.settings_data['exceeded_data_limit']):
+                elif self.total_data_usage >= (self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit']):
                     self.exceeded_limit_reached.emit()
                     self.running = False
 
@@ -100,8 +85,9 @@ class DataUsageApp(QWidget):
     def __init__(self):
         super().__init__()
         self.init_ui()
-
-        self.tracker = DataUsageTracker()
+        enable_exceeded_limit = False  # Define the variable with a default value
+        
+        self.tracker = DataUsageTracker(enable_exceeded_limit)
         self.tracker.wifi_disabled.connect(self.show_wifi_disabled_message)
         self.tracker.data_limit_alert.connect(self.show_data_limit_alert)
         self.tracker.exceeded_data_limit_alert.connect(self.show_exceeded_data_limit_alert)
