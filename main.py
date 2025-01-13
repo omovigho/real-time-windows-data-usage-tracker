@@ -1,4 +1,5 @@
 import psutil
+import os
 from PyQt5.QtCore import Qt, QTimerEvent
 from PyQt5.QtWidgets import (
     QApplication,
@@ -10,6 +11,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QPixmap, QCursor
 from settings import SettingsWindow  # Import the settings window class
+from data_wifi_control import DataUsageTracker # Import the data usage tracker class
 
 class RealTimeInternetUsageMonitor(QWidget):
     def __init__(self):
@@ -55,6 +57,10 @@ class RealTimeInternetUsageMonitor(QWidget):
 
         self.startTimer(100)
         self.show()
+        
+        # Data Wifi Control
+        if os.path.exists("settings_data.json"):
+            self.data_wifi_control()
 
     def timerEvent(self, event: QTimerEvent):
         # Use psutil to monitor network usage
@@ -80,6 +86,11 @@ class RealTimeInternetUsageMonitor(QWidget):
         # Open the Settings Window
         settings_window = SettingsWindow(self)
         settings_window.exec_()
+        
+    def data_wifi_control(self, event):
+        # Open the Settings Window
+        data_wifi_control = DataUsageTracker(self)
+        data_wifi_control.exec_()
 
 
 class App(QApplication):
