@@ -1,4 +1,6 @@
 # json file for data storage
 settings_data.json
 
+demo.py
+
 __pycache__/
