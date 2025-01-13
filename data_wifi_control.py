@@ -132,10 +132,10 @@ class DataUsageApp(QWidget):
         
     '''def close_tracker(self):
         self.tracker.stop()
-        self.close()'''
+        self.close()
 
 if __name__ == "__main__":
     app = QApplication([])
     window = DataUsageApp()
     window.show()
-    app.exec_()
+    app.exec_()'''
