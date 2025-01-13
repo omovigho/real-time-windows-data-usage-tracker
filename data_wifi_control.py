@@ -60,7 +60,7 @@ class DataUsageTracker(QThread):
             self.total_data_used = current_data_usage - initial_data_usage
 
             #if self.enable_data_limit and self.data_limit and self.total_data_used >= self.data_limit:
-            if self.settings_data['enable-data-limit'] == True:
+            if self.settings_data['enable-data-limit'] == True and self.settings_data['data-limit'] is not 'Null':
                 if self.total_data_used >= self.data_limit:
                     if self.settings_data['enable-alert-message'] == True:
                         self.data_limit_alert.emit()
