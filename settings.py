@@ -135,13 +135,13 @@ class SettingsWindow(QDialog):
         self.layout.addWidget(self.current_data_limit_label)
 
         # Enable Data Limit Toggle
-        self.enable_data_limit_checkbox = QCheckBox("Enable Data Limit")
+        '''self.enable_data_limit_checkbox = QCheckBox("Enable Data Limit")
         self.enable_data_limit_checkbox.setChecked(self.settings_data.get("enable-data-limit", False))
-        self.layout.addWidget(self.enable_data_limit_checkbox)
+        self.layout.addWidget(self.enable_data_limit_checkbox)'''
         # Enable Data Limit Toggle
-        '''self.enable_data_limit_toggle = ToggleButton("ON", "OFF")
+        self.enable_data_limit_toggle = ToggleButton("ON", "OFF")
         self.layout.addWidget(QLabel("Enable Data Limit:"))
-        self.layout.addWidget(self.enable_data_limit_toggle, alignment=Qt.AlignLeft)'''
+        self.layout.addWidget(self.enable_data_limit_toggle, alignment=Qt.AlignLeft)
 
     def add_exceeded_data_limit_section(self):
         # Exceeded Data Limit Input
@@ -172,14 +172,9 @@ class SettingsWindow(QDialog):
         self.enable_alert_checkbox.setChecked(self.settings_data.get("enable-alert-message", False))
         self.layout.addWidget(self.enable_alert_checkbox)'''
         # Enable Data Limit Alert Toggle
-        exceeded_alert_layout = QHBoxLayout()
         self.enable_alert_toggle = ToggleButton("ON", "OFF")
-        exceeded_alert_layout.addWidget(QLabel("Enable Data Limit Alert:"))
-        exceeded_alert_layout.addWidget(self.enable_alert_toggle, alignment=Qt.AlignLeft)
-        self.layout.addWidget(exceeded_alert_layout)
-        '''self.enable_alert_toggle = ToggleButton("ON", "OFF")
         self.layout.addWidget(QLabel("Enable Data Limit Alert:"))
-        self.layout.addWidget(self.enable_alert_toggle, alignment=Qt.AlignLeft)'''
+        self.layout.addWidget(self.enable_alert_toggle, alignment=Qt.AlignLeft)
 
     def add_save_button(self):
         save_button = QPushButton("Save")
@@ -202,9 +197,9 @@ class SettingsWindow(QDialog):
 
     def save_settings(self):
         # Save Enable Data Limit and Alert settings
-        self.settings_data["enable-data-limit"] = self.enable_data_limit_checkbox.isChecked()
+        #self.settings_data["enable-data-limit"] = self.enable_data_limit_checkbox.isChecked()
         #self.settings_data["enable-alert-message"] = self.enable_alert_checkbox.isChecked()
-        #enable_data_limit = self.enable_data_limit_toggle.is_on
+        self.settings_data["enable-data-limit"] = self.enable_data_limit_toggle.is_on
         self.settings_data["enable-alert-message"] = self.enable_alert_toggle.is_on
         #QMessageBox.information(self, "Settings Saved", f"Enable Data Limit: {enable_data_limit}\nEnable Alert: {enable_alert}")
         #self.close()
