@@ -131,20 +131,30 @@ class DataUsageApp(QWidget):
         QMessageBox.critical(self, "Wi-Fi Disabled", "Your Wi-Fi has been disabled because you exceeded your data limit.")
 
     def show_data_limit_alert(self):
+        """Show a confirmation dialog for data limit reached and handle user response."""
+        if hasattr(self, "alert_in_progress") and self.alert_in_progress:
+            # Prevent multiple dialogs
+            return
+
+        self.alert_in_progress = True  # Set flag to indicate an alert is in progress
+
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
         msg_box.setWindowTitle("Data Limit Reached")
         msg_box.setText("You have reached your data limit. Do you want to use the exceeded data limit?")
         msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
 
-        response = msg_box.exec_()
+        response = msg_box.exec_()  # Show modal dialog and wait for user response
 
         if response == QMessageBox.Yes:
             self.enable_exceeded_limit = True
             self.tracker.exceeded_data_limit = self.enable_exceeded_limit  # Pass the value to the tracker
         else:
-            self.tracker.disconnect_wifi()
-            self.tracker.stop()
+            self.tracker.disconnect_wifi()  # Disconnect WiFi
+            self.tracker.stop()            # Stop the tracker
+
+        self.alert_in_progress = False  # Reset flag after handling response
+
 
     def show_exceeded_data_limit_alert(self):
         msg_box = QMessageBox()
