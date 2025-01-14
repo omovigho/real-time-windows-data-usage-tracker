@@ -45,6 +45,7 @@ class DataUsageTracker(QThread):
         time.sleep(1)
         if iface.status() == const.IFACE_DISCONNECTED:
             print("Wi-Fi disconnected successfully.")
+            self.stop()
         else:
             print("Failed to disconnect Wi-Fi.")
 
@@ -90,7 +91,7 @@ class DataUsageTracker(QThread):
 
             #if self.enable_data_limit and self.data_limit and self.total_data_used >= self.data_limit:
             if self.settings_data['enable-data-limit'] == True and self.settings_data['data-limit'] != 'Null':
-                if self.total_data_used >= self.data_limit:
+                if self.total_data_used >= self.settings_data['data-limit']:
                     if self.settings_data['enable-alert-message'] == True:
                         self.data_limit_alert.emit()
                     else:
@@ -98,10 +99,10 @@ class DataUsageTracker(QThread):
                         self.running = False
 
             if self.exceeded_data_limit == True:
-                if self.settings_data['exceeded-data-limit'] == "unlimited":
+                if self.settings_data['exceeded-data-limit'] == "Unlimited":
                     # Stop tracking when exceeded limit is unlimited
                     self.running = False
-                elif self.total_data_usage >= (self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit']):
+                elif self.total_data_used >= (self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit']):
                     self.exceeded_limit_reached.emit()
                     self.running = False
 
@@ -114,9 +115,9 @@ class DataUsageApp(QWidget):
     def __init__(self):
         super().__init__()
         self.init_ui()
-        enable_exceeded_limit = False  # Define the variable with a default value
+        self.enable_exceeded_limit = False  # Define the variable with a default value
         
-        self.tracker = DataUsageTracker(enable_exceeded_limit)
+        self.tracker = DataUsageTracker(self.enable_exceeded_limit)
         self.tracker.wifi_disabled.connect(self.show_wifi_disabled_message)
         self.tracker.data_limit_alert.connect(self.show_data_limit_alert)
         self.tracker.exceeded_data_limit_alert.connect(self.show_exceeded_data_limit_alert)
@@ -140,9 +141,10 @@ class DataUsageApp(QWidget):
 
         if response == QMessageBox.Yes:
             self.enable_exceeded_limit = True
-            self.start_tracker()
+            self.tracker.exceeded_data_limit = self.enable_exceeded_limit  # Pass the value to the tracker
         else:
-            self.disable_wifi()
+            self.tracker.disconnect_wifi()
+            self.tracker.stop()
 
     def show_exceeded_data_limit_alert(self):
         msg_box = QMessageBox()
