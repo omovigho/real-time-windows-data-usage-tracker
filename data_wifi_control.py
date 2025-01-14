@@ -2,6 +2,9 @@ import os
 import psutil
 import time
 import json
+import pywifi
+
+from pywifi import const
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QMessageBox
 )
@@ -30,6 +33,16 @@ class DataUsageTracker(QThread):
             return {}
 
         # Default enable states can be hardcoded or loaded from other files
+        
+    def disconnect_wifi(self):
+        wifi = pywifi.PyWiFi()
+        iface = wifi.interfaces()[0]
+        iface.disconnect()
+        time.sleep(1)
+        if iface.status() == const.IFACE_DISCONNECTED:
+            print("Wi-Fi disconnected successfully.")
+        else:
+            print("Failed to disconnect Wi-Fi.")
 
     def get_wifi_adapter(self):
         """Get the name of the Wi-Fi adapter."""
