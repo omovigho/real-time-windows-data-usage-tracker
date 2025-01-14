@@ -172,9 +172,14 @@ class SettingsWindow(QDialog):
         self.enable_alert_checkbox.setChecked(self.settings_data.get("enable-alert-message", False))
         self.layout.addWidget(self.enable_alert_checkbox)'''
         # Enable Data Limit Alert Toggle
+        exceeded_alert_layout = QHBoxLayout()
         self.enable_alert_toggle = ToggleButton("ON", "OFF")
+        exceeded_alert_layout.addWidget(QLabel("Enable Data Limit Alert:"))
+        exceeded_alert_layout.addWidget(self.enable_alert_toggle, alignment=Qt.AlignLeft)
+        self.layout.addWidget(exceeded_alert_layout)
+        '''self.enable_alert_toggle = ToggleButton("ON", "OFF")
         self.layout.addWidget(QLabel("Enable Data Limit Alert:"))
-        self.layout.addWidget(self.enable_alert_toggle, alignment=Qt.AlignLeft)
+        self.layout.addWidget(self.enable_alert_toggle, alignment=Qt.AlignLeft)'''
 
     def add_save_button(self):
         save_button = QPushButton("Save")
