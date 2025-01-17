@@ -125,7 +125,7 @@ class DataUsageApp(QWidget):
 
     def init_ui(self):
         self.setWindowTitle("Data Usage Tracker")
-        self.setGeometry(300, 300, 400, 200)
+        self.setGeometry(300, 300, 400, 250)
 
     def show_wifi_disabled_message(self):
         QMessageBox.critical(self, "Wi-Fi Disabled", "Your Wi-Fi has been disabled because you exceeded your data limit.")
