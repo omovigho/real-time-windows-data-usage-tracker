@@ -97,10 +97,12 @@ class DataUsageTracker(QThread):
                     else:
                         self.disconnect_wifi()
                         self.running = False
+                        
 
             if self.exceeded_data_limit == True:
                 if self.settings_data['exceeded-data-limit'] == "Unlimited":
                     # Stop tracking when exceeded limit is unlimited
+                    self.stop()
                     self.running = False
                 elif self.total_data_used >= (self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit']):
                     self.exceeded_limit_reached.emit()
@@ -110,6 +112,7 @@ class DataUsageTracker(QThread):
             
     def stop(self):
         self.running = False
+        self.exit()
         
 class DataUsageApp(QWidget):
     def __init__(self):
@@ -125,7 +128,7 @@ class DataUsageApp(QWidget):
 
     def init_ui(self):
         self.setWindowTitle("Data Usage Tracker")
-        self.setGeometry(300, 300, 400, 250)
+        self.setGeometry(300, 300, 400, 200)
 
     def show_wifi_disabled_message(self):
         QMessageBox.critical(self, "Wi-Fi Disabled", "Your Wi-Fi has been disabled because you exceeded your data limit.")
