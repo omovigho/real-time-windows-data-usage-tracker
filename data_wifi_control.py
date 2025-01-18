@@ -25,6 +25,7 @@ class DataUsageTracker(QThread):
     wifi_disabled = pyqtSignal()
     data_limit_alert = pyqtSignal()
     exceeded_data_limit_alert = pyqtSignal()
+    data_usage_updated = pyqtSignal(float)
 
     def __init__(self, enable_exceeded_limit):
         super().__init__()
@@ -33,14 +34,16 @@ class DataUsageTracker(QThread):
         self.initial_data_sent = psutil.net_io_counters().bytes_sent
         self.initial_data_received = psutil.net_io_counters().bytes_recv
         self.total_data_used = 0.0  # Initialize total data used to 0
-        
+        print("Tracking already.. --")
         self.data_limit = None  # in bytes
         #self.total_data_used = 0  # in bytes
         self.exceeded_data_limit = enable_exceeded_limit
         self.adapter_name = self.get_wifi_adapter()
         self.settings_data = self.load_settings()
         self.running = True
+        print(f'settings are: {self.settings_data['data-limit']}')
         self.startTimer(100)
+        #self.run()
         #self.show()
         
 
@@ -104,10 +107,11 @@ class DataUsageTracker(QThread):
         """Start tracking data usage."""
         #self.load_settings()
         #initial_data_usage = self.get_data_usage()
-
+        print(f'settings are: {self.settings_data['exceeded-data-limit']}')
         while self.running:
             #current_data_usage = self.get_data_usage()
             #self.total_data_used = current_data_usage - initial_data_usage
+            #print("The program is running.. --")
 
             #if self.enable_data_limit and self.data_limit and self.total_data_used >= self.data_limit:
             if self.settings_data['enable-data-limit'] == True and self.settings_data['data-limit'] != 'Null':
@@ -124,9 +128,12 @@ class DataUsageTracker(QThread):
                     self.running = False
                     self.exit_program()
                 elif isinstance(self.settings_data['exceeded-data-limit'], (int, float)) == True:
+                    
                     #resetting data limit to the sum of data-limit and exceeded-data-limit 
                     self.settings_data['data-limit'] = self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit'] 
+                    print(f'settings are: {self.settings_data['data-limit']}')
                     if self.total_data_used >= self.settings_data['data-limit']:
+                        print("Exceeded data limit.. --")
                         self.exceeded_data_limit_alert.emit()
                         self.running = False
                         self.disconnect_wifi()
@@ -149,9 +156,6 @@ class DataUsageApp(QWidget):
         self.enable_exceeded_limit = False  # Define the variable with a default value
         
         self.tracker = DataUsageTracker(self.enable_exceeded_limit)
-        # Update the label in the main thread
-        total_data_mb = self.tracker.total_data_used / (1024**2)
-        self.update_label(total_data_mb)
         self.tracker.wifi_disabled.connect(self.show_wifi_disabled_message)
         self.tracker.data_limit_alert.connect(self.show_data_limit_alert)
         self.tracker.exceeded_data_limit_alert.connect(self.show_exceeded_data_limit_alert)
@@ -163,14 +167,6 @@ class DataUsageApp(QWidget):
         self.setWindowTitle("Data Usage Tracker")
         self.setGeometry(300, 300, 400, 200)
         
-        layout = QVBoxLayout(self)
-
-        self.data_usage_label = QLabel("Data Usage: 0 MB")
-        layout.addWidget(self.data_usage_label)
-        
-    def update_label(self, data_usage_mb: float):
-        # Update the label with the new data usage
-        self.data_usage_label.setText(f"Data Usage: {data_usage_mb:.2f} MB")
 
     def show_wifi_disabled_message(self):
         QMessageBox.critical(self, "Wi-Fi Disabled", "Your Wi-Fi has been disabled because you exceeded your data limit.")
