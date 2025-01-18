@@ -3,6 +3,7 @@ import psutil
 import time
 import json
 import pywifi
+import sys
 
 from PyQt5.QtCore import Qt, QTimerEvent
 from pywifi import const
@@ -45,7 +46,7 @@ class DataUsageTracker(QThread):
         time.sleep(1)
         if iface.status() == const.IFACE_DISCONNECTED:
             print("Wi-Fi disconnected successfully.")
-            self.stop()
+            self.exit_program()
         else:
             print("Failed to disconnect Wi-Fi.")
 
@@ -97,23 +98,29 @@ class DataUsageTracker(QThread):
                     else:
                         self.disconnect_wifi()
                         self.running = False
-                        
 
             if self.exceeded_data_limit == True:
                 if self.settings_data['exceeded-data-limit'] == "Unlimited":
                     # Stop tracking when exceeded limit is unlimited
-                    self.stop()
                     self.running = False
+                    self.exit_program()
                 elif self.total_data_used >= (self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit']):
                     self.exceeded_limit_reached.emit()
                     self.running = False
+                    self.exit_program()
 
             time.sleep(1)  # Check every second
             
     def stop(self):
         self.running = False
-        self.exit()
         
+    def exit_program(self):
+        """Close the window and exit the program."""
+        self.close()  # Close the main window
+        QApplication.instance().quit()  # Exit the QApplication
+        sys.exit(0)  # Ensure the Python process terminates
+    
+    
 class DataUsageApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -154,7 +161,7 @@ class DataUsageApp(QWidget):
             self.tracker.exceeded_data_limit = self.enable_exceeded_limit  # Pass the value to the tracker
         else:
             self.tracker.disconnect_wifi()  # Disconnect WiFi
-            self.tracker.stop()            # Stop the tracker
+            #self.tracker.stop()            # Stop the tracker
 
         self.alert_in_progress = False  # Reset flag after handling response
 
@@ -167,7 +174,8 @@ class DataUsageApp(QWidget):
         msg_box.setStandardButtons(QMessageBox.Ok)
         msg_box.exec_()
         self.disconnect_wifi()
-        self.tracker.running = False
+        #self.tracker.running = False
+        #self.tracker.exit_program()
         
     def closeEvent(self, event):
         self.tracker.running = False
