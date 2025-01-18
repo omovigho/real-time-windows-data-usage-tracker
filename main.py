@@ -19,6 +19,12 @@ class RealTimeInternetUsageMonitor(QWidget):
 
         self.setWindowTitle("Real-Time Internet Usage Monitor")
         self.setGeometry(100, 100, 400, 100)
+        
+        # Store the initial baseline network stats
+        self.initial_data_sent = psutil.net_io_counters().bytes_sent
+        self.initial_data_received = psutil.net_io_counters().bytes_recv
+        self.total_data_used = 0.0  # Initialize total data used to 0
+        
 
         layout = QVBoxLayout(self)
 
@@ -68,8 +74,11 @@ class RealTimeInternetUsageMonitor(QWidget):
         data_sent = network_stats.bytes_sent
         data_received = network_stats.bytes_recv
 
+        # Calculate total data usage since program start
+        self.total_data_used = (data_sent - self.initial_data_sent) + (data_received - self.initial_data_received)
+        
         # Calculate total data usage in MB
-        total_data_mb = (data_sent + data_received) / (1024**2)
+        total_data_mb = self.total_data_used / (1024**2)
 
         # Update the label in the main thread
         self.update_label(total_data_mb)
