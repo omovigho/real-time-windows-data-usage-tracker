@@ -21,7 +21,7 @@ class DataUsageTracker(QThread):
     def __init__(self, enable_exceeded_limit):
         super().__init__()
         self.data_limit = None  # in bytes
-        self.total_data_used = 0  # in bytes
+        #self.total_data_used = 0  # in bytes
         self.exceeded_data_limit = enable_exceeded_limit
         self.adapter_name = self.get_wifi_adapter()
         self.settings_data = self.load_settings()
@@ -84,7 +84,7 @@ class DataUsageTracker(QThread):
     def run(self):
         """Start tracking data usage."""
         #self.load_settings()
-        initial_data_usage = self.get_data_usage()
+        #initial_data_usage = self.get_data_usage()
 
         while self.running:
             #current_data_usage = self.get_data_usage()
@@ -104,10 +104,13 @@ class DataUsageTracker(QThread):
                     # Stop tracking when exceeded limit is unlimited
                     self.running = False
                     self.exit_program()
-                elif self.total_data_used >= (self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit']):
-                    self.exceeded_limit_reached.emit()
+                elif isinstance(self.settings_data['exceeded-data-limit'], (int, float)) == True:
+                    #resetting data limit to the sum of data-limit and exceeded-data-limit to assume to prevent 
+                    self.settings_data['data-limit'] = self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit'] 
+                    self.total_data_used >= (self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit'])
+                    self.exceeded_data_limit_alert.emit()
                     self.running = False
-                    self.exit_program()
+                    self.disconnect_wifi()
 
             time.sleep(1)  # Check every second
             
@@ -116,7 +119,6 @@ class DataUsageTracker(QThread):
         
     def exit_program(self):
         """Close the window and exit the program."""
-        self.close()  # Close the main window
         QApplication.instance().quit()  # Exit the QApplication
         sys.exit(0)  # Ensure the Python process terminates
     
@@ -158,7 +160,7 @@ class DataUsageApp(QWidget):
 
         if response == QMessageBox.Yes:
             self.enable_exceeded_limit = True
-            self.tracker.exceeded_data_limit = self.enable_exceeded_limit  # Pass the value to the tracker
+            self.tracker.exceeded_data_limit = self.enable_exceeded_limit  # Pass the value to the 
         else:
             self.tracker.disconnect_wifi()  # Disconnect WiFi
             #self.tracker.stop()            # Stop the tracker
@@ -173,7 +175,7 @@ class DataUsageApp(QWidget):
         msg_box.setText("You have exceeded your data limit.")
         msg_box.setStandardButtons(QMessageBox.Ok)
         msg_box.exec_()
-        self.disconnect_wifi()
+        #self.disconnect_wifi()
         #self.tracker.running = False
         #self.tracker.exit_program()
         
