@@ -27,7 +27,7 @@ class DataUsageTracker(QThread):
     exceeded_data_limit_alert = pyqtSignal()
     data_usage_updated = pyqtSignal(float)
 
-    def __init__(self, enable_exceeded_limit):
+    def __init__(self, enable_exceeded_limit=False):
         super().__init__()
         
         # Store the initial baseline network stats
@@ -42,6 +42,7 @@ class DataUsageTracker(QThread):
         self.settings_data = self.load_settings()
         self.running = True
         print(f'settings are: {self.settings_data['data-limit']}')
+        print(f'running is {self.running}')
         self.startTimer(100)
         #self.run()
         #self.show()
@@ -107,7 +108,7 @@ class DataUsageTracker(QThread):
         """Start tracking data usage."""
         #self.load_settings()
         #initial_data_usage = self.get_data_usage()
-        print(f'settings are: {self.settings_data['exceeded-data-limit']}')
+        print(f'exceeded settings are: {self.settings_data['exceeded-data-limit']}')
         while self.running:
             #current_data_usage = self.get_data_usage()
             #self.total_data_used = current_data_usage - initial_data_usage
@@ -123,20 +124,24 @@ class DataUsageTracker(QThread):
                         self.running = False
 
             if self.exceeded_data_limit == True:
+                print(f'exceeded settings for are: {self.settings_data['exceeded-data-limit']}')
                 if self.settings_data['exceeded-data-limit'] == "Unlimited":
                     # Stop tracking when exceeded limit is unlimited
-                    self.running = False
+                    
+                    print("Exceeded data limit.. --")
                     self.exit_program()
+                    #self.running = False
+                    
                 elif isinstance(self.settings_data['exceeded-data-limit'], (int, float)) == True:
                     
                     #resetting data limit to the sum of data-limit and exceeded-data-limit 
                     self.settings_data['data-limit'] = self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit'] 
                     print(f'settings are: {self.settings_data['data-limit']}')
                     if self.total_data_used >= self.settings_data['data-limit']:
-                        print("Exceeded data limit.. --")
+                        #print("Exceeded data limit.. --")
                         self.exceeded_data_limit_alert.emit()
                         self.running = False
-                        self.disconnect_wifi()
+                        #self.disconnect_wifi()
 
             time.sleep(1)  # Check every second
             
@@ -144,9 +149,16 @@ class DataUsageTracker(QThread):
         self.running = False
         
     def exit_program(self):
-        """Close the window and exit the program."""
-        #QApplication.instance().quit()  # Exit the QApplication
-        sys.exit(0)  # Ensure the Python process terminates
+        """Exit the entire program."""
+        # Terminate the subprocess if running
+        '''if self.data_tracker_process and self.data_tracker_process.poll() is None:
+            self.data_tracker_process.terminate()'''
+
+        # Exit the application
+        QApplication.quit()
+
+        # Terminate Python interpreter
+        sys.exit()
     
     
 class DataUsageApp(QWidget):
