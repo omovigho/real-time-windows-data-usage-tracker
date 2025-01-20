@@ -37,6 +37,8 @@ class DataUsageTracker(QThread):
         print("Tracking already.. --")
         self.data_limit = None  # in bytes
         #self.total_data_used = 0  # in bytes
+        self.total_exceeded_data = 0.0
+        self.check_data_limit = False  # preventing data enable-alert-message popping up multiple times
         self.exceeded_data_limit = enable_exceeded_limit
         self.adapter_name = self.get_wifi_adapter()
         self.settings_data = self.load_settings()
@@ -117,15 +119,17 @@ class DataUsageTracker(QThread):
             #if self.enable_data_limit and self.data_limit and self.total_data_used >= self.data_limit:
             if self.settings_data['enable-data-limit'] == True and self.settings_data['data-limit'] != 'Null':
                 if self.total_data_used >= self.settings_data['data-limit']:
-                    if self.settings_data['enable-alert-message'] == True:
-                        self.data_limit_alert.emit()
-                    else:
-                        self.wifi_disabled.emit()
-                        time.sleep(3)
-                        self.disconnect_wifi()
-                        self.running = False
+                    if self.check_data_limit == False:
+                        if self.settings_data['enable-alert-message'] == True:
+                            self.data_limit_alert.emit()
+                        else:
+                            self.wifi_disabled.emit()
+                            time.sleep(3)
+                            self.disconnect_wifi()
+                            self.running = False
 
                 if self.exceeded_data_limit == True:
+                    self.check_data_limit = True
                     print(f'exceeded settings for are: {self.settings_data['exceeded-data-limit']}')
                     if self.settings_data['exceeded-data-limit'] == "Unlimited":
                         # Stop tracking when exceeded limit is unlimited
@@ -135,15 +139,17 @@ class DataUsageTracker(QThread):
                         #self.running = False
                         
                     elif isinstance(self.settings_data['exceeded-data-limit'], (int, float)) == True:
-                        
+                        print("runnung data limit exceeded")
                         #resetting data limit to the sum of data-limit and exceeded-data-limit 
-                        self.settings_data['data-limit'] = self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit'] 
-                        print(f'settings are: {self.settings_data['data-limit']}')
-                        if self.total_data_used >= self.settings_data['data-limit']:
-                            #print("Exceeded data limit.. --")
+                        self.total_exceeded_data = self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit'] 
+                        print(f'settings are ppp: {self.settings_data['data-limit']}')
+                        print(f'total is : {self.total_data_used}')
+                        print(f'total exceeded is mmm : {self.total_exceeded_data}')
+                        if self.total_data_used >= self.total_exceeded_data:
+                            print("Exceeded data limit.. --pol")
                             self.exceeded_data_limit_alert.emit()
                             self.running = False
-                            #self.disconnect_wifi()
+                            self.disconnect_wifi()
 
             time.sleep(1)  # Check every second
             
