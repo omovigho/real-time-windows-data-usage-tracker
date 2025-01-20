@@ -121,6 +121,7 @@ class DataUsageTracker(QThread):
                         self.data_limit_alert.emit()
                     else:
                         self.wifi_disabled.emit()
+                        time.sleep(3)
                         self.disconnect_wifi()
                         self.running = False
 
@@ -143,10 +144,6 @@ class DataUsageTracker(QThread):
                             self.exceeded_data_limit_alert.emit()
                             self.running = False
                             #self.disconnect_wifi()
-            else:
-                print("Data limit is not set.. --")
-                self.running = False
-                self.exit_program()
 
             time.sleep(1)  # Check every second
             
