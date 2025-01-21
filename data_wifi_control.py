@@ -108,9 +108,6 @@ class DataUsageTracker(QThread):
 
     def run(self):
         """Start tracking data usage."""
-        #self.load_settings()
-        #initial_data_usage = self.get_data_usage()
-        print(f'exceeded settings are: {self.settings_data['exceeded-data-limit']}')
         while self.running:
             #current_data_usage = self.get_data_usage()
             #self.total_data_used = current_data_usage - initial_data_usage
@@ -135,20 +132,13 @@ class DataUsageTracker(QThread):
                     print(f'exceeded settings for are: {self.settings_data['exceeded-data-limit']}')
                     if self.settings_data['exceeded-data-limit'] == "Unlimited":
                         # Stop tracking when exceeded limit is unlimited
-                        
-                        print("Exceeded data limit.. --")
                         self.exit_program()
                         #self.running = False
                         
                     elif isinstance(self.settings_data['exceeded-data-limit'], (int, float)) == True:
-                        print("runnung data limit exceeded")
                         #resetting data limit to the sum of data-limit and exceeded-data-limit 
-                        self.total_exceeded_data = self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit'] 
-                        print(f'settings are ppp: {self.settings_data['data-limit']}')
-                        print(f'total is : {self.total_data_used}')
-                        print(f'total exceeded is mmm : {self.total_exceeded_data}')
+                        self.total_exceeded_data = self.settings_data['data-limit'] + self.settings_data['exceeded-data-limit']   
                         if self.total_data_used >= self.total_exceeded_data:
-                            print("Exceeded data limit.. --pol")
                             self.exceeded_data_limit_alert.emit()
                             self.running = False
                             self.disconnect_wifi()
