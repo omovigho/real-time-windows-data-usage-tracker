@@ -70,12 +70,12 @@ class DataUsageTracker(QThread):
         else:
             print("Failed to disconnect Wi-Fi.")
 
-    def get_wifi_adapter(self):
+    '''def get_wifi_adapter(self):
         """Get the name of the Wi-Fi adapter."""
         for adapter, stats in psutil.net_if_stats().items():
             if "wi-fi" in adapter.lower() or "wireless" in adapter.lower():
                 return adapter
-        return None
+        return None'''
 
     def get_data_usage(self):
         """Get total data usage for the Wi-Fi adapter."""
@@ -101,10 +101,10 @@ class DataUsageTracker(QThread):
         
     
 
-    def disable_wifi(self):
+    ''def disable_wifi(self):
         """Disable the Wi-Fi adapter."""
         os.system(f'netsh interface set interface "{self.adapter_name}" admin=disable')
-        self.wifi_disabled.emit()
+        self.wifi_disabled.emit()''
 
     def run(self):
         """Start tracking data usage."""
@@ -204,7 +204,6 @@ class DataUsageApp(QWidget):
             self.tracker.exceeded_data_limit = self.enable_exceeded_limit  # Pass the value to the 
         else:
             self.tracker.disconnect_wifi()  # Disconnect WiFi
-            #self.tracker.stop()            # Stop the tracker
 
         self.alert_in_progress = False  # Reset flag after handling response
 
@@ -220,14 +219,14 @@ class DataUsageApp(QWidget):
         #self.tracker.running = False
         #self.tracker.exit_program()
         
-    def closeEvent(self, event):
+    '''def closeEvent(self, event):
         self.tracker.running = False
         self.tracker.wait()
         event.accept()
         
     def close_tracker(self):
         self.tracker.stop()
-        self.close()
+        self.close()'''
 
 if __name__ == "__main__":
     app = QApplication([])
