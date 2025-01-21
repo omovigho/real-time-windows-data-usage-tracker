@@ -108,11 +108,11 @@ class RealTimeInternetUsageMonitor(QWidget):
         settings_window = SettingsWindow(self)
         settings_window.exec_()
         
-    def data_wifi_control(self):
+    '''def data_wifi_control(self):
         # Open data wifi control window
         #if os.path.exists("settings_data.json"):
         data_wifi_control = DataUsageTracker(self)
-        data_wifi_control.exec_()
+        data_wifi_control.exec_()'''
         
     def start_data_tracker(self):
         os.system("python data_wifi_control.py")
