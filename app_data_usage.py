@@ -274,6 +274,7 @@ class NetworkUsageGUI(QWidget):
         settings_window = SettingsWindow(self)
         settings_window.exec_()
 
+
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
