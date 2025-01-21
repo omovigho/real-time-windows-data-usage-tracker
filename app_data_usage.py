@@ -245,6 +245,7 @@ class NetworkUsageGUI(QWidget):
                 continue
         return processes
 
+    # Start the monitoring threads
     def start_monitoring(self):
         self.is_program_running = True
         self.connection_thread = ConnectionThread(self.connection2pid, self.is_program_running)
