@@ -122,14 +122,16 @@ class DataUsageTracker(QThread):
                     if self.check_data_limit == False:
                         if self.settings_data['enable-alert-message'] == True:
                             self.data_limit_alert.emit()
+                            self.check_data_limit = True
                         else:
                             self.wifi_disabled.emit()
                             time.sleep(3)
                             self.disconnect_wifi()
                             self.running = False
+                            
 
                 if self.exceeded_data_limit == True:
-                    self.check_data_limit = True
+                    
                     print(f'exceeded settings for are: {self.settings_data['exceeded-data-limit']}')
                     if self.settings_data['exceeded-data-limit'] == "Unlimited":
                         # Stop tracking when exceeded limit is unlimited
