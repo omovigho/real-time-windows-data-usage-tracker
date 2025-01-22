@@ -161,7 +161,7 @@ class SettingsWindow(QDialog):
 
         # Display Current Exceeded Data Limit
         if self.settings_data.get("exceeded-data-limit", 'Null') == "Unlimited":
-            self.current_exceeded_limit_label = QLabel(f"Exceeded Data Limit: Null")
+            self.current_exceeded_limit_label = QLabel(f"Exceeded Data Limit: Unlimited")
         else:
             exceeded_data_int  = int((self.settings_data.get("exceeded-data-limit", 'Null')))
             self.current_exceeded_limit_label = QLabel(f"Exceeded Data Limit: {self.get_size(exceeded_data_int)}")
