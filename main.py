@@ -114,8 +114,8 @@ class RealTimeInternetUsageMonitor(QWidget):
         data_wifi_control = DataUsageTracker(self)
         data_wifi_control.exec_()'''
         
-    def start_data_tracker(self):
-        os.system("python data_wifi_control.py")
+    '''def start_data_tracker(self):
+        os.system("python data_wifi_control.py")'''
         
     def start_data_tracker(self):
         """Start the data tracker program as an external script."""
