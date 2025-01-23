@@ -101,7 +101,7 @@ class SettingsWindow(QDialog):
         # Save Button
         self.add_save_button()
         
-        
+    # Getting the size of the data in different format    
     def get_size(self, bytes: int) -> str:
         for unit in ["", "K", "M", "G", "T", "P"]:
             if bytes < 1024:
