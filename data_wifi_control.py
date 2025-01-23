@@ -150,13 +150,8 @@ class DataUsageTracker(QThread):
         self.running = False'''
         
     def exit_program(self):
-        """Exit the entire program."""
-        # Terminate the subprocess if running
-        '''if self.data_tracker_process and self.data_tracker_process.poll() is None:
-            self.data_tracker_process.terminate()'''
-
-        # Exit the application
-        QApplication.quit()
+        """Exit the entire program."""     
+        QApplication.quit() # Exit the application
         self.running = False
         # Terminate Python interpreter
         sys.exit()
