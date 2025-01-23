@@ -260,6 +260,7 @@ class NetworkUsageGUI(QWidget):
     def update_ui(self):
         self.timerEvent(None)
 
+    # Enabling that data wifi show on top
     def handle_always_on_top(self, toggled: bool):
         self.setWindowFlag(Qt.WindowStaysOnTopHint, toggled)
         self.show()
