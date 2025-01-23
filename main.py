@@ -69,7 +69,7 @@ class RealTimeInternetUsageMonitor(QWidget):
         
         self.update_data_usage = 0.0
         # Data Wifi Control
-        if os.path.exists("settings_data.json"):
+        """if os.path.exists("settings_data.json"):
             # Initialize data tracking
             '''self.data_tracker = DataUsageTracker(self)
             self.data_tracker.exec_()
@@ -77,7 +77,7 @@ class RealTimeInternetUsageMonitor(QWidget):
             # Start the data tracker as a separate process
             data_tracker_process = Process(target=self.start_data_tracker)
             data_tracker_process.start()'''
-            self.start_data_tracker()
+            self.start_data_tracker()"""
     
 
     def timerEvent(self, event: QTimerEvent):
@@ -98,7 +98,8 @@ class RealTimeInternetUsageMonitor(QWidget):
     def update_label(self, data_usage_mb: float):
         # Update the label with the new data usage
         self.data_usage_label.setText(f"Data Usage: {data_usage_mb:.2f} MB")
-
+    
+    #stay on top of other window
     def handle_always_on_top(self, toggled: bool):
         self.setWindowFlag(Qt.WindowStaysOnTopHint, toggled)
         self.show()
