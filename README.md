@@ -1,53 +1,78 @@
-# real-time-windows-data-usage-tracker
-Description:  Track real-time internet data usage for individual applications on Windows with this Python program. Monitor data consumption, categorize applications, and display usage information in an intuitive user interface.
+# Real-Time Windows Data Usage Tracker
 
-# Data Usage Tracker
+## Overview
 
-Data Usage Tracker is a Python application designed to track real-time internet data usage for individual applications on Windows computers. It provides a user-friendly interface for monitoring the data consumption of various applications and categorizes them as system processes or standalone applications.
+The **Real-Time Windows Data Usage Tracker** is a Python-based application that monitors and tracks internet data usage on Windows devices in real-time. It provides insights into data consumption and allows users to control Wi-Fi connectivity effectively.
 
 ## Features
 
-- Real-time monitoring of internet data usage for each application
-- Classification of applications into system processes and standalone applications
-- Attractive and intuitive user interface implemented with PyQt5
-- Display of application icons alongside data usage information
-- Simultaneous tracking of multiple applications' data usage
+- Real-time monitoring of data usage.
+- Wi-Fi control capabilities (enable/disable connection programmatically).
+- Configurable settings for tracking preferences.
+- Lightweight and efficient, suitable for continuous usage.
 
-## Requirements
+## Project Structure
 
-- Python 3.x
-- PyQt5
-- psutil
-- scapy
+The project consists of the following core files:
+
+- **`app_data_usage.py`** – Tracks real-time data usage.
+- **`data_wifi_control.py`** – Manages Wi-Fi connectivity.
+- **`settings.py`** – Configures tracking preferences.
+- **`requirements.txt`** – Contains all required dependencies.
 
 ## Installation
 
+### Prerequisites
+
+Ensure you have Python installed on your system. You can download it from [Python's official website](https://www.python.org/).
+
+### Setup
+
 1. Clone the repository:
-[git clone https://github.com/yourusername/data-usage-tracker.git](https://github.com/omovigho/real-time-windows-data-usage-tracker.git)
+
+   ```bash
+   git clone https://github.com/your-username/real-time-windows-data-usage-tracker.git
+   cd real-time-windows-data-usage-tracker
+   ```bash
 
 2. Install dependencies:
-pip install -r requirements.txt
 
+   ```bash
+   pip install -r requirements.txt
+   ```bash
 
 ## Usage
 
-1. Run the application:
+Run the tracker by executing the main script:
 
+```bash
+python app_data_usage.py
+```
 
-2. The application will start tracking data usage in real-time.
+To control Wi-Fi settings, use:
 
-3. The user interface displays a list of applications along with their data usage. System processes are categorized separately from standalone applications.
+```bash
+python data_wifi_control.py
+```
 
-4. Icons representing each application are displayed alongside their data usage.
+## Configuration
 
-5. The application continuously updates data usage information at regular intervals.
+Modify `settings.py` to adjust monitoring preferences.
 
 ## Contributing
 
-Contributions are welcome! If you find any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request.
+Contributions are welcome! To contribute:
+
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature-name`).
+3. Commit your changes (`git commit -m "Add new feature"`).
+4. Push to your branch (`git push origin feature-name`).
+5. Create a pull request.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
+## Contact
 
+For any inquiries, please open an issue or reach out via email at [danagofure330@gmail.com](danagofure330@gmail.com).
