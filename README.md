@@ -18,6 +18,7 @@ The project consists of the following core files:
 - **`app_data_usage.py`** – Tracks real-time data usage.
 - **`data_wifi_control.py`** – Manages Wi-Fi connectivity.
 - **`settings.py`** – Configures tracking preferences.
+- **`main.py`** - Calculate the total internet data usage.
 - **`requirements.txt`** – Contains all required dependencies.
 
 ## Installation
@@ -31,7 +32,7 @@ Ensure you have Python installed on your system. You can download it from [Pytho
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/real-time-windows-data-usage-tracker.git
+   git clone https://github.com/omovigho/real-time-windows-data-usage-tracker.git
    cd real-time-windows-data-usage-tracker
    ```bash
 
