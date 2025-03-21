@@ -2,3 +2,4 @@ PyQt5==5.15.5
 psutil==5.8.0
 scapy==2.4.5
 pywifi==1.1.12
+pydivert==2.1.0
