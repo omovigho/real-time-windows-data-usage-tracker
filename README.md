@@ -34,13 +34,13 @@ Ensure you have Python installed on your system. You can download it from [Pytho
    ```bash
    git clone https://github.com/omovigho/real-time-windows-data-usage-tracker.git
    cd real-time-windows-data-usage-tracker
-   ```bash
+   ```
 
 2. Install dependencies:
 
    ```bash
    pip install -r requirements.txt
-   ```bash
+   ```
 
 ## Usage
 
