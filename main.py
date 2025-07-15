@@ -95,15 +95,18 @@ class RealTimeInternetUsageMonitor(QWidget):
         # Update the label in the main thread
         self.update_label(total_data_mb)
 
+    
     def update_label(self, data_usage_mb: float):
         # Update the label with the new data usage
         self.data_usage_label.setText(f"Data Usage: {data_usage_mb:.2f} MB")
+
     
     #stay on top of other window
     def handle_always_on_top(self, toggled: bool):
         self.setWindowFlag(Qt.WindowStaysOnTopHint, toggled)
         self.show()
-        
+
+    
     def open_settings(self, event):
         # Open the Settings Window
         settings_window = SettingsWindow(self)
@@ -117,7 +120,8 @@ class RealTimeInternetUsageMonitor(QWidget):
         
     '''def start_data_tracker(self):
         os.system("python data_wifi_control.py")'''
-        
+
+    
     def start_data_tracker(self):
         """Start the data tracker program as an external script."""
         try:
